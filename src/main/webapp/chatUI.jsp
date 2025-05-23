@@ -217,6 +217,7 @@
             let currentChatUserId = null;
             let currentChatUserName = null;
 
+
             const ws = new WebSocket("ws://18.136.119.45:8080/testChat/chat");
 
             ws.onopen = () => console.log("WebSocket connected");
