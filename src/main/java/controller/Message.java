@@ -13,18 +13,30 @@ public class Message {
     private String content;
     private Timestamp timestamp;
     private boolean is_recall;
+    private boolean is_Read;
 
     public Message() {}
 
-    public Message(int messageId, int conversationId, int senderId, String content, Timestamp timestamp, boolean isre) {
+    public Message(int messageId, int conversationId, int senderId, String content, Timestamp timestamp, boolean isre, boolean isread) {
         this.messageId = messageId;
         this.conversationId = conversationId;
         this.senderId = senderId;
         this.content = content;
         this.timestamp = timestamp;
         this.is_recall=isre;
+        this.is_Read=isread;
     }
 
+    public boolean isIs_Read() {
+        return is_Read;
+    }
+
+    public void setIs_Read(boolean is_Read) {
+        this.is_Read = is_Read;
+    }
+
+    
+    
     // Getters and Setters
     public int getMessageId() {
         return messageId;

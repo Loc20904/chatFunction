@@ -9,7 +9,7 @@ public class MessageDAO {
     public static int saveMessage(int conversationId, int senderId, String message) {
         int messageId = -1;
         try (Connection conn = DBUtil.getConnection()) {
-            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt) VALUES (?, ?, ?, GETDATE())";
+            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead) VALUES (?, ?, ?, GETDATE(),0)";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, conversationId);
             ps.setInt(2, senderId);
@@ -26,6 +26,48 @@ public class MessageDAO {
         return messageId;
     }
 
+    public static List<Integer> getUsersWithUnreadMessages(int myUserId) {
+        List<Integer> unreadSenders = new ArrayList<>();
+        String sql
+                = "SELECT DISTINCT SenderId "
+                + "FROM Messages "
+                + "WHERE SenderId != ? AND isRead = 0 AND ConversationId IN ( "
+                + "    SELECT ConversationId "
+                + "    FROM Conversations "
+                + "    WHERE UserAId = ? OR UserBId = ? "
+                + ")";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, myUserId);
+            ps.setInt(2, myUserId);
+            ps.setInt(3, myUserId);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                unreadSenders.add(rs.getInt("SenderId"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return unreadSenders;
+    }
+
+    public static void markMessagesAsRead(int fromUserId, int toUserId) {
+        String sql = "UPDATE Messages SET isRead = 1 WHERE SenderId = ? AND ConversationId IN ("
+                + "SELECT ConversationId FROM Conversations WHERE "
+                + "(UserAId = ? AND UserBId = ?) OR (UserAId = ? AND UserBId = ?))";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, fromUserId); // Sender
+            ps.setInt(2, fromUserId);
+            ps.setInt(3, toUserId);
+            ps.setInt(4, toUserId);
+            ps.setInt(5, fromUserId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static List<Message> getMessagesByConversationId(int conversationId) {
         List<Message> list = new ArrayList<>();
         try (Connection conn = DBUtil.getConnection()) {
@@ -40,7 +82,8 @@ public class MessageDAO {
                         rs.getInt("SenderId"),
                         rs.getString("Content"),
                         rs.getTimestamp("SentAt"),
-                        rs.getBoolean("is_recall")
+                        rs.getBoolean("is_recall"),
+                        rs.getBoolean("isRead")
                 );
                 list.add(msg);
             }
@@ -79,10 +122,8 @@ public class MessageDAO {
         }
         return -1; // không tìm thấy
     }
-    public static void main(String[] args) {
-        for(Message a:getMessagesByConversationId(1))
-        {
-            System.out.println(a);
-        }
+
+    public static void main(String[] args) throws SQLException {
+        
     }
 }

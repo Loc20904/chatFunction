@@ -5,6 +5,7 @@
 package controller;
 
 import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.servlet.http.HttpSession;
@@ -17,6 +18,7 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 import java.io.StringReader;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +41,19 @@ public class chat {
             sessions.put(user.getUserId(), session);
             System.out.println("User connected: " + user.getUsername());
         }
+        List<Integer> unreadSenders = MessageDAO.getUsersWithUnreadMessages(user.getUserId());
+
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        for (Integer senderId : unreadSenders) {
+            arrayBuilder.add(senderId);
+        }
+
+        JsonObject unreadNotice = Json.createObjectBuilder()
+            .add("type", "unread_list")
+            .add("senders", arrayBuilder)
+            .build();
+
+        session.getAsyncRemote().sendText(unreadNotice.toString());
     }
 
     @OnMessage
@@ -48,11 +63,11 @@ public class chat {
             String type = json.containsKey("type") ? json.getString("type") : "message";
 
             Integer fromUserId = null;
-            String fromUsername=null;
+            String fromUsername = null;
             for (Map.Entry<Integer, Session> entry : sessions.entrySet()) {
                 if (entry.getValue().equals(session)) {
                     fromUserId = entry.getKey();
-                    fromUsername=UserDAO.getUserById(fromUserId).getUsername();
+                    fromUsername = UserDAO.getUserById(fromUserId).getUsername();
                     break;
                 }
             }
@@ -156,7 +171,7 @@ public class chat {
                     }
                     break;
                 }
-                
+
                 // Xử lý unblock
                 case "unblock": {
                     int blockedId = json.getInt("blockedId");
@@ -184,6 +199,12 @@ public class chat {
                     }
                     break;
                 }
+                case "read": {
+                    int senderId = json.getInt("fromUserId"); // người gửi tin nhắn
+                    int receiverId = fromUserId; // chính là người đang mở đoạn chat
+                    System.out.println("aaaaaaaa");
+                    MessageDAO.markMessagesAsRead(senderId, receiverId);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -191,12 +212,14 @@ public class chat {
     }
 
     @OnClose
-    public void onClose(Session session) {
+    public void onClose(Session session
+    ) {
         sessions.values().remove(session);
     }
 
     @OnError
-    public void onError(Session session, Throwable throwable) {
+    public void onError(Session session, Throwable throwable
+    ) {
         throwable.printStackTrace();
     }
 }

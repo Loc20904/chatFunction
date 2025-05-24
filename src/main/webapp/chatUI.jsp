@@ -217,7 +217,7 @@
             let currentChatUserId = null;
             let currentChatUserName = null;
 
-            const ws = new WebSocket("ws://10.12.65.111:8080/testChat/chat");
+            const ws = new WebSocket("ws://localhost:8080/testChat/chat");
 
             ws.onopen = () => console.log("WebSocket connected");
             ws.onclose = () => console.log("WebSocket closed");
@@ -228,7 +228,12 @@
 
             ws.onmessage = function (event) {
                 const msg = JSON.parse(event.data);
-
+                if (msg.type === "unread_list") {
+                    msg.senders.forEach(senderId => {
+                        markUserAsUnread(senderId); // Thêm class 'user-unread'
+                    });
+                    return;
+                }
                 if (msg.type === "block_status") {
                     const messageInput = document.getElementById("messageInput");
                     const sendBtn = document.querySelector(".inputBox button");
@@ -304,6 +309,9 @@
 
                 if (!isSentByMe && msg.fromUserId !== currentChatUserId) {
                     markUserAsUnread(msg.fromUserId);
+                } else
+                {
+                    markMessagesAsRead(msg.fromUserId);
                 }
             };
 
@@ -321,7 +329,7 @@
                 document.getElementById("blockNotice").style.display = "none";
 
                 loadChatHistory(userId);
-                clearUnreadMark(userId);
+                markMessagesAsRead(userId);
 
                 fetch("/testChat/checkBlock?user1=" + currentUserId + "&user2=" + userId)
                         .then(res => res.json())
@@ -420,7 +428,7 @@
                     const senderName = isSentByMe ? "" : currentChatUserName + ":";
                     const time = new Date(msg.timestamp);
                     const timeText = isNaN(time) ? "Invalid Date" : time.toString().substring(0, 24);
-                    messageElement.innerHTML = "<b>"+senderName+"</b> Tin nhắn đã được thu hồi<br><small style=\"color:gray\">"+timeText+"</small>";
+                    messageElement.innerHTML = "<b>" + senderName + "</b> Tin nhắn đã được thu hồi<br><small style=\"color:gray\">" + timeText + "</small>";
                 } else {
                     console.error("Message element not found for messageId:", msg.messageId);
                 }
@@ -482,7 +490,6 @@
             }
 
             function showBrowserNotification(username, content) {
-            console.log("ahsdjhasd");
                 if (Notification.permission === "granted") {
                     const notification = new Notification("New message from " + username, {
                         body: content,
@@ -496,18 +503,27 @@
 
             function markUserAsUnread(userId) {
                 const li = [...document.querySelectorAll("#userList li")].find(li => li.dataset.userid === userId.toString());
-                console.log("Mark unread for userId:", userId, "found li:", li);
                 if (li && !li.classList.contains("user-unread")) {
                     li.classList.add("user-unread");
                 }
             }
 
+            function markMessagesAsRead(fromUserId) {
+                const message = {
+                    type: "read",
+                    fromUserId: fromUserId
+                };
+                ws.send(JSON.stringify(message));
+                clearUnreadMark(fromUserId);
+            }
+            
             function clearUnreadMark(userId) {
                 const li = [...document.querySelectorAll("#userList li")].find(li => li.dataset.userid === userId.toString());
                 if (li) {
                     li.classList.remove("user-unread");
                 }
             }
+
 
             function blockUser() {
                 if (!currentChatUserId || !ws || ws.readyState !== ws.OPEN)
