@@ -14,10 +14,11 @@ public class Message {
     private Timestamp timestamp;
     private boolean is_recall;
     private boolean is_Read;
+    private String type;
 
     public Message() {}
 
-    public Message(int messageId, int conversationId, int senderId, String content, Timestamp timestamp, boolean isre, boolean isread) {
+    public Message(int messageId, int conversationId, int senderId, String content, Timestamp timestamp, boolean isre, boolean isread, String type) {
         this.messageId = messageId;
         this.conversationId = conversationId;
         this.senderId = senderId;
@@ -25,8 +26,17 @@ public class Message {
         this.timestamp = timestamp;
         this.is_recall=isre;
         this.is_Read=isread;
+        this.type=type;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+    
     public boolean isIs_Read() {
         return is_Read;
     }

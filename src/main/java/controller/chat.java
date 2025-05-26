@@ -9,6 +9,7 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 import jakarta.websocket.EndpointConfig;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
@@ -16,10 +17,15 @@ import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -29,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @ServerEndpoint(value = "/chat", configurator = HttpSessionConfigurator.class)
 public class chat {
 
+    private static final String IMAGE_DIR = "D:\\SQLServer_Store_Image";
     // Map userId -> session WebSocket
     private static final Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
@@ -49,9 +56,9 @@ public class chat {
         }
 
         JsonObject unreadNotice = Json.createObjectBuilder()
-            .add("type", "unread_list")
-            .add("senders", arrayBuilder)
-            .build();
+                .add("type", "unread_list")
+                .add("senders", arrayBuilder)
+                .build();
 
         session.getAsyncRemote().sendText(unreadNotice.toString());
     }
@@ -76,6 +83,40 @@ public class chat {
             }
 
             switch (type) {
+                case "image": {
+                    int toUserId = json.getInt("toUserId");
+                    String imageUrl = json.getString("imageUrl");
+                    if (blockDAO.isBlocked(toUserId, fromUserId) || blockDAO.isBlocked(fromUserId, toUserId)) {
+                        JsonObject blockNotify = Json.createObjectBuilder()
+                                .add("type", "block")
+                                .add("message", "Blocked user")
+                                .build();
+                        session.getAsyncRemote().sendText(blockNotify.toString());
+                        return;
+                    }
+
+                    int conversationId = ConversationDAO.getOrCreateConversation(fromUserId, toUserId);
+                    int messageId = MessageDAO.saveMessage(conversationId, fromUserId, imageUrl, "image");
+                    String timestamp = LocalDateTime.now().toString();
+
+                    JsonObject imageMessage = Json.createObjectBuilder()
+                            .add("type", "image")
+                            .add("fromUserId", fromUserId)
+                            .add("fromUsername", fromUsername)
+                            .add("toUserId", toUserId)
+                            .add("content", imageUrl)
+                            .add("messageId", messageId)
+                            .add("conversationId", conversationId)
+                            .add("timestamp", timestamp)
+                            .build();
+
+                    Session toSession = sessions.get(toUserId);
+                    if (toSession != null && toSession.isOpen()) {
+                        toSession.getAsyncRemote().sendText(imageMessage.toString());
+                    }
+                    session.getAsyncRemote().sendText(imageMessage.toString());
+                    break;
+                }
                 case "message": {
                     int toUserId = json.getInt("toUserId");
                     String content = json.getString("content");
@@ -202,7 +243,6 @@ public class chat {
                 case "read": {
                     int senderId = json.getInt("fromUserId"); // người gửi tin nhắn
                     int receiverId = fromUserId; // chính là người đang mở đoạn chat
-                    System.out.println("aaaaaaaa");
                     MessageDAO.markMessagesAsRead(senderId, receiverId);
                 }
             }

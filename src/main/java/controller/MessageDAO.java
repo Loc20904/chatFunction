@@ -9,11 +9,31 @@ public class MessageDAO {
     public static int saveMessage(int conversationId, int senderId, String message) {
         int messageId = -1;
         try (Connection conn = DBUtil.getConnection()) {
-            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead) VALUES (?, ?, ?, GETDATE(),0)";
+            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,'text')";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, conversationId);
             ps.setInt(2, senderId);
             ps.setString(3, message);
+            ps.executeUpdate();
+
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                messageId = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return messageId;
+    }
+    public static int saveMessage(int conversationId, int senderId, String message,String type) {
+        int messageId = -1;
+        try (Connection conn = DBUtil.getConnection()) {
+            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,?)";
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, conversationId);
+            ps.setInt(2, senderId);
+            ps.setString(3, message);
+            ps.setString(4, type);
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -83,7 +103,8 @@ public class MessageDAO {
                         rs.getString("Content"),
                         rs.getTimestamp("SentAt"),
                         rs.getBoolean("is_recall"),
-                        rs.getBoolean("isRead")
+                        rs.getBoolean("isRead"),
+                        rs.getString("type")
                 );
                 list.add(msg);
             }

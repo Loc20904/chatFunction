@@ -205,6 +205,10 @@
 
                 <div class="inputBox" style="display: flex; align-items: center; gap: 10px;">
                     <input type="text" id="messageInput" placeholder="Type a message..." onkeydown="handleKeyPress(event)" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;" />
+                    <label id="imageUploadLabel" for="imageUpload" style="cursor: pointer;">
+                        📷
+                    </label>
+                    <input type="file" id="imageUpload" style="display: none;" accept="image/*" onchange="sendImage()" />
                     <button onclick="sendMessage()" style="padding: 10px 16px; font-size: 14px; background-color: #007bff; border: none; color: white; border-radius: 6px; cursor: pointer;">Send</button>
                 </div>
                 <p id="blockNotice" style="color: red; font-weight: bold; display: none;">Bạn đã block người dùng này.</p>
@@ -216,6 +220,8 @@
             const currentUsername = "<%= user.getUsername()%>";
             let currentChatUserId = null;
             let currentChatUserName = null;
+
+            const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
 
             const ws = new WebSocket("ws://localhost:8080/testChat/chat");
 
@@ -257,6 +263,8 @@
                         messageInput.style.display = "none";
                         sendBtn.style.display = "none";
                         blockBtn.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "none";
+                        document.getElementById("imageUpload").style.display = "none";
                         if (msg.status === "blocked_by_me") {
                             unblockBtn.style.display = "inline-block";
                         } else {
@@ -272,10 +280,11 @@
                         blockBtn.style.display = "inline-block";
                         unblockBtn.style.display = "none";
                         blockNotice.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "inline-block";
+                        document.getElementById("imageUpload").style.display = "none";
                     }
                     return;
                 }
-
 
                 if (msg.type === "recall") {
                     handleRecallMessage(msg);
@@ -370,6 +379,12 @@
             }
 
             function addMessageToChatBox(msg) {
+                if (msg.type === "image")
+                {
+                    addImageToChatBox(msg);
+                    console.log("ajsdkahjshd");
+                    return;
+                }
                 const chatBox = document.getElementById("chatBox");
                 const p = document.createElement("p");
                 const isSentByMe = (msg.fromUserId !== undefined && msg.fromUserId === currentUserId) ||
@@ -402,7 +417,6 @@
                 p.className = isSentByMe ? "msg-sent" : "msg-received";
                 p.dataset.messageId = msID || ""; // Đảm bảo dataset.messageId luôn có giá trị
                 let messageContent = "<b>" + (isSentByMe ? "" : currentChatUserName + ":") + "</b> " + content + "<br>" + timeText;
-
                 if (isSentByMe && msID !== undefined && msID !== null && (typeof msID === "string" || typeof msID === "number")) {
                     const validMsID = (typeof msID === "string") ? msID.trim() : msID.toString();
                     if (validMsID && !isNaN(Number(validMsID)) && Number(validMsID) > 0) {
@@ -415,6 +429,71 @@
                 }
 
                 p.innerHTML = messageContent;
+                chatBox.appendChild(p);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            function addImageToChatBox(msg) {
+                const chatBox = document.getElementById("chatBox");
+                const msID = msg.messageId;
+
+                if (msg.type !== "image") {
+                    console.warn("Message type is not image, ignoring:", msg);
+                    return;
+                }
+
+                const isSentByMe = (msg.fromUserId !== undefined && msg.fromUserId === currentUserId) ||
+                        (msg.senderId !== undefined && msg.senderId === currentUserId);
+
+                const isRecalled = msg.is_recall === true || msg.type === "recall";
+
+                let timeText = "";
+                if (msg.timestamp) {
+                    const time = new Date(msg.timestamp);
+                    if (!isNaN(time)) {
+                        timeText = '<small style="color:gray">' + time.toString().substring(0, 24) + '</small>';
+                    } else {
+                        timeText = '<small style="color:red">Invalid Date</small>';
+                        console.error("Invalid timestamp received:", msg.timestamp);
+                    }
+                }
+
+                const p = document.createElement("p");
+                p.className = isSentByMe ? "msg-sent" : "msg-received";
+                p.dataset.messageId = msID || "";
+
+                if (isRecalled) {
+                    const senderName = isSentByMe ? "" : (msg.fromUsername || currentChatUserName) + ":";
+                    p.innerHTML = "<b>" + senderName + "</b> Tin nhắn đã được thu hồi<br>" + timeText;
+                } else {
+                    // Tạo phần ảnh
+                    const img = document.createElement("img");
+                    img.src = contextPath + msg.content;
+                    img.style.maxWidth = "200px";
+                    img.style.borderRadius = "8px";
+
+                    p.appendChild(img);
+
+                    // Tạo nội dung thời gian và nút Recall theo định dạng bạn đưa
+                    let messageContent = "<br><b>" + (isSentByMe ? "" : (msg.fromUsername || currentChatUserName) + ":") + "</b><br>" + timeText;
+
+                    const msID = msg.messageId;
+                    if (isSentByMe && msID !== undefined && msID !== null && (typeof msID === "string" || typeof msID === "number")) {
+                        const validMsID = (typeof msID === "string") ? msID.trim() : msID.toString();
+                        if (validMsID && !isNaN(Number(validMsID)) && Number(validMsID) > 0) {
+                            messageContent += "<button class=\"recall-btn\" data-message-id=\"" + msID + "\" onclick=\"recallMessage(this)\">Recall</button>";
+                        } else {
+                            console.warn("messageId không hợp lệ, không thêm nút Recall:", msID);
+                        }
+                    } else if (isSentByMe) {
+                        console.warn("Không thể tạo nút Recall vì messageId không hợp lệ:", msID);
+                    }
+
+                    const divContent = document.createElement("div");
+                    divContent.innerHTML = messageContent;
+                    p.appendChild(divContent);
+                }
+
                 chatBox.appendChild(p);
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
@@ -516,7 +595,7 @@
                 ws.send(JSON.stringify(message));
                 clearUnreadMark(fromUserId);
             }
-            
+
             function clearUnreadMark(userId) {
                 const li = [...document.querySelectorAll("#userList li")].find(li => li.dataset.userid === userId.toString());
                 if (li) {
@@ -543,6 +622,8 @@
                 document.querySelector(".inputBox button").style.display = "none";
                 document.getElementById("blockNotice").style.display = "block";
                 document.getElementById("blockNotice").textContent = "Bạn đã block người dùng này";
+                document.getElementById("imageUploadLabel").style.display = "none";
+                document.getElementById("imageUpload").style.display = "none";
             }
 
 
@@ -563,6 +644,8 @@
                 document.getElementById("messageInput").style.display = "block";
                 document.querySelector(".inputBox button").style.display = "inline-block";
                 document.getElementById("blockNotice").style.display = "none";
+                document.getElementById("imageUploadLabel").style.display = "inline-block";
+                document.getElementById("imageUpload").style.display = "none";
             }
 
             function recallMessage(button) {
@@ -590,6 +673,32 @@
                 }
             }
 
+            function sendImage() {
+                const input = document.getElementById("imageUpload");
+                const file = input.files[0];
+                const formData = new FormData();
+                formData.append("image", file);
+                formData.append("fromUserId", currentUserId); // bạn cần gán đúng
+                formData.append("toUserId", currentChatUserId);
+
+                fetch("/testChat/uploadImage", {
+                    method: "POST",
+                    body: formData
+                })
+                        .then(response => response.json())
+                        .then(result => {
+                            const imageUrl = result.imageUrl;
+
+                            // Sau khi upload thành công, gửi ảnh qua WebSocket
+                            ws.send(JSON.stringify({
+                                type: "image",
+                                fromUserId: currentUserId,
+                                toUserId: currentChatUserId,
+                                imageUrl: imageUrl
+                            }));
+                        })
+                        .catch(error => console.error("Upload failed", error));
+            }
         </script>
     </body>
 </html>
