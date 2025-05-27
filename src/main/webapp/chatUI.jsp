@@ -49,7 +49,7 @@
                     <label id="imageUploadLabel" for="imageUpload" style="cursor: pointer;">
                         📷
                     </label>
-                    <input type="file" id="imageUpload" style="display: none;" accept="image/*" onchange="sendImage()" />
+                    <input type="file" id="imageUpload" style="display: none;" multiple accept="image/*" onchange="sendImage()" />
                     <button onclick="sendMessage()" style="padding: 10px 16px; font-size: 14px; background-color: #007bff; border: none; color: white; border-radius: 6px; cursor: pointer;">Send</button>
                 </div>
                 <p id="blockNotice" style="color: red; font-weight: bold; display: none;">Bạn đã block người dùng này.</p>

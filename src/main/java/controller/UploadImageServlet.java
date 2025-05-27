@@ -4,6 +4,7 @@
  */
 package controller;
 
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -16,6 +17,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,7 +28,9 @@ import java.util.UUID;
  */
 @MultipartConfig
 public class UploadImageServlet extends HttpServlet {
+
     private static final String IMAGE_DIR = "D:\\SQLServer_Store_Image";
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -74,32 +80,35 @@ public class UploadImageServlet extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-   @Override
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Part imagePart = req.getPart("image");
         String fromUserId = req.getParameter("fromUserId");
         String toUserId = req.getParameter("toUserId");
 
-        if (imagePart == null || imagePart.getSize() == 0) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "No image uploaded");
-            return;
+        List<String> imageUrls = new ArrayList<>();
+
+        for (Part part : req.getParts()) {
+            if (part.getName().equals("images") && part.getSize() > 0) {
+                String filename = Paths.get(part.getSubmittedFileName()).getFileName().toString();
+                String uniqueName = UUID.randomUUID() + "_" + filename;
+                File saveFile = new File(IMAGE_DIR, uniqueName);
+
+                try (InputStream is = part.getInputStream(); FileOutputStream fos = new FileOutputStream(saveFile)) {
+                    is.transferTo(fos);
+                }
+
+                String dbImagePath = "/images/" + uniqueName;
+                imageUrls.add(dbImagePath);
+
+            }
         }
 
-        String filename = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
-        String uniqueName = UUID.randomUUID() + "_" + filename;
-        File saveFile = new File(IMAGE_DIR, uniqueName);
-
-        try (InputStream is = imagePart.getInputStream();
-             FileOutputStream fos = new FileOutputStream(saveFile)) {
-            is.transferTo(fos);
-        }
-
-        // Lưu đường dẫn ảnh vào SQL Server (ví dụ)
-        String dbImagePath = "/images/" + uniqueName;
-
-        // Trả về đường dẫn ảnh
         resp.setContentType("application/json");
-        resp.getWriter().write("{\"success\":true,\"imageUrl\":\"" + dbImagePath + "\"}");
+        resp.setCharacterEncoding("UTF-8");
+
+        // Trả về mảng JSON: {"imageUrls": ["/images/xxx", "/images/yyy"]}
+        String json = new Gson().toJson(Collections.singletonMap("imageUrls", imageUrls));
+        resp.getWriter().write(json);
     }
 
     /**

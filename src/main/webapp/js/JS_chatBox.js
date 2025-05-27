@@ -13,7 +13,7 @@ async function sendMessage() {
         instruction: "Chỉ trả lời dựa trên dữ liệu trong database. Nếu không có thông tin, hãy trả lời: 'Vui lòng hỏi câu liên quan đến danh sách xe ô tô có sẵn.'"
     };
 
-    let chatBox = document.getElementById("chatBox");
+    let chatBox = document.getElementById("chatBoxAI");
     chatBox.innerHTML += `<div><b>Bạn:</b> ${userInput}</div>`;
     document.getElementById("userInput").value = "";
 

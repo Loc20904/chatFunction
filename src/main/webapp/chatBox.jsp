@@ -16,7 +16,7 @@
             <span>Find Your Information</span>
             <button onclick="toggleChat()">✖</button>
         </div>
-        <div id="chatBox"></div>
+        <div id="chatBoxAI"></div>
         <div id="butt">
             <input type="text" id="userInput" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event)" />
             <button id="buttonChat" onclick="sendMessage()">Gửi</button>
