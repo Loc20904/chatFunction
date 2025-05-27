@@ -9,7 +9,9 @@ public class MessageDAO {
     public static int saveMessage(int conversationId, int senderId, String message) {
         int messageId = -1;
         try (Connection conn = DBUtil.getConnection()) {
-            String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,'text')";
+
+          String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,'text')";
+
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, conversationId);
             ps.setInt(2, senderId);
