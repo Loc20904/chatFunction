@@ -8,7 +8,7 @@ public class MessageDAO {
 
     public static int saveMessage(int conversationId, int senderId, String message) {
         int messageId = -1;
-        try (Connection conn = DBUtil.getConnection()) {
+        try (Connection conn = DBUtil.getConnect()) {
 
           String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,'text')";
 
@@ -29,7 +29,7 @@ public class MessageDAO {
     }
     public static int saveMessage(int conversationId, int senderId, String message,String type) {
         int messageId = -1;
-        try (Connection conn = DBUtil.getConnection()) {
+        try (Connection conn = DBUtil.getConnect()) {
             String sql = "INSERT INTO Messages (ConversationId, SenderId, Content, SentAt,isRead,type) VALUES (?, ?, ?, GETDATE(),0,?)";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, conversationId);
@@ -59,7 +59,7 @@ public class MessageDAO {
                 + "    WHERE UserAId = ? OR UserBId = ? "
                 + ")";
 
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnect(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, myUserId);
             ps.setInt(2, myUserId);
             ps.setInt(3, myUserId);
@@ -78,7 +78,7 @@ public class MessageDAO {
         String sql = "UPDATE Messages SET isRead = 1 WHERE SenderId = ? AND ConversationId IN ("
                 + "SELECT ConversationId FROM Conversations WHERE "
                 + "(UserAId = ? AND UserBId = ?) OR (UserAId = ? AND UserBId = ?))";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnect(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, fromUserId); // Sender
             ps.setInt(2, fromUserId);
             ps.setInt(3, toUserId);
@@ -92,7 +92,7 @@ public class MessageDAO {
 
     public static List<Message> getMessagesByConversationId(int conversationId) {
         List<Message> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection()) {
+        try (Connection conn = DBUtil.getConnect()) {
             String sql = "SELECT * FROM Messages WHERE ConversationId = ? ORDER BY SentAt ASC";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, conversationId);
@@ -119,7 +119,7 @@ public class MessageDAO {
     // Đánh dấu là đã thu hồi
     public static boolean recallMessage(int messageId, int userId) {
         String sql = "UPDATE Messages SET is_recall = 1 WHERE MessageId = ? AND SenderId = ?";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnect(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, messageId);
             ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
@@ -132,7 +132,7 @@ public class MessageDAO {
     // Lấy người nhận để thông báo thu hồi
     public static int getReceiverIdOfMessage(int messageId, int senderId) {
         String sql = "SELECT ConversationId FROM Messages WHERE MessageId = ? AND SenderId = ?";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnect(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, messageId);
             ps.setInt(2, senderId);
             ResultSet rs = ps.executeQuery();

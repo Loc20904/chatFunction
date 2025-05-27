@@ -5,7 +5,6 @@
 package controller;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,8 +12,8 @@ import java.sql.SQLException;
 public class blockDAO {
 
     // Hàm lấy connection, bạn cần thay thông tin DB đúng với môi trường bạn
-    private static Connection getConnection() throws SQLException {
-        return DBUtil.getConnection();
+    public static Connection getConnection() throws SQLException {
+        return new DBUtil().getConnect();
     }
 
     // Kiểm tra xem blockerUserId đã block blockedUserId chưa

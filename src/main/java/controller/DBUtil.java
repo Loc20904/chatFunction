@@ -1,36 +1,33 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package controller;
 
-import java.sql.Connection;
+import static Repository.DatabaseInfo.DBURL;
+import static Repository.DatabaseInfo.DRIVERNAME;
+import static Repository.DatabaseInfo.PASSDB;
+import static Repository.DatabaseInfo.USERDB;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ *
+ * @author Thanh Loc
+ */
 public class DBUtil {
-
-    private static final String URL = "jdbc:mysql://database-2.cfwc8w0ey4aa.ap-southeast-1.rds.amazonaws.com/UsedGoodsDB?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "admin"; // đổi nếu cần
-    private static final String PASSWORD = "123456789"; // nhập password nếu có
-
-    public static Connection getConnection() {
+    public static java.sql.Connection getConnect() {
         try {
-            // Không bắt buộc gọi Class.forName nếu dùng Maven, nhưng có thể thêm để an toàn
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            Class.forName(DRIVERNAME);
         } catch (ClassNotFoundException e) {
-            System.err.println("⚠️ Không tìm thấy driver MySQL.");
-            e.printStackTrace();
+            System.out.println("Error loading driver" + e);
+        }
+        try {
+            java.sql.Connection con = DriverManager.getConnection(DBURL, USERDB, PASSDB);
+            return con;
         } catch (SQLException e) {
-            System.err.println("❌ Lỗi khi kết nối đến cơ sở dữ liệu MySQL.");
-            e.printStackTrace();
+            System.out.println("Error: " + e);
         }
         return null;
-    }
-    
-    public static void main(String[] args) {
-        Connection conn = DBUtil.getConnection();
-        if (conn != null) {
-            System.out.println("✅ Kết nối MySQL thành công!");
-        } else {
-            System.out.println("❌ Không thể kết nối MySQL.");
-        }
     }
 }
