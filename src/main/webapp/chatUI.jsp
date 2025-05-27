@@ -14,170 +14,11 @@
     <head>
         <meta charset="UTF-8" />
         <title>Chat</title>
-        <style>
-            body {
-                font-family: "Segoe UI", sans-serif;
-                margin: 0;
-                padding: 20px;
-                background-color: #f4f4f9;
-                color: #333;
-            }
-
-            h2 {
-                margin-bottom: 20px;
-            }
-
-            h3 {
-                margin-top: 0;
-                margin-bottom: 10px;
-            }
-
-            #userList {
-                list-style: none;
-                padding: 0;
-                max-height: 300px;
-                overflow-y: auto;
-                background-color: #fff;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                padding: 8px;
-                margin-bottom: 20px;
-            }
-
-            #userList li {
-                cursor: pointer;
-                padding: 8px 12px;
-                margin-bottom: 6px;
-                border-radius: 6px;
-                transition: background-color 0.2s, transform 0.1s;
-            }
-
-            #userList li:hover {
-                background-color: #e6f0ff;
-            }
-
-            #userList li.selected {
-                background-color: #d0e7ff;
-                font-weight: bold;
-                border-left: 4px solid #3399ff;
-            }
-
-            #chatBox {
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                height: 300px;
-                overflow-y: auto;
-                padding: 10px;
-                background-color: #ffffff;
-                margin-bottom: 12px;
-            }
-
-            .msg-sent {
-                text-align: right;
-                color: #007bff;
-                margin: 4px 0;
-            }
-
-            .msg-received {
-                text-align: left;
-                color: #28a745;
-                margin: 4px 0;
-            }
-
-            #messageInput {
-                width: calc(100% - 90px);
-                padding: 10px;
-                border: 1px solid #ccc;
-                border-radius: 6px;
-                font-size: 14px;
-                margin-right: 8px;
-            }
-
-            button {
-                padding: 10px 16px;
-                font-size: 14px;
-                background-color: #007bff;
-                border: none;
-                color: white;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-
-            button:hover {
-                background-color: #0056b3;
-            }
-
-            .chat-container {
-                display: flex;
-                gap: 40px;
-            }
-
-            .chat-users, .chat-main {
-                flex: 1;
-            }
-            .msg-sent, .msg-received {
-                display: inline-block;
-                max-width: 70%;
-                padding: 8px 12px;
-                margin: 6px 0;
-                border-radius: 12px;
-                background-color: #e6f0ff;
-                position: relative;
-                word-wrap: break-word;
-                font-size: 14px;
-            }
-
-            .msg-sent {
-                background-color: #d2e3fc;
-                align-self: flex-end;
-                float: right;
-                clear: both;
-                text-align: left;
-            }
-
-            .msg-received {
-                background-color: #f1f1f1;
-                align-self: flex-start;
-                float: left;
-                clear: both;
-                text-align: left;
-            }
-
-            .msg-sent small, .msg-received small {
-                display: block;
-                color: gray;
-                font-size: 11px;
-                text-align: right;
-                margin-top: 4px;
-            }
-            #userList li.user-unread {
-                background-color: #ffe5b4 !important; /* Màu cam nhạt */
-            }
-
-            .msg-recalled {
-                background-color: #f8f8f8;
-                color: #888;
-                font-style: italic;
-            }
-
-            .recall-btn {
-                margin-left: 8px;
-                padding: 4px 8px;
-                font-size: 12px;
-                background-color: #ff4444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-            .recall-btn:hover {
-                background-color: #cc0000;
-            }
-        </style>
+        <link rel="stylesheet" href="css/CSS_chatFunction.css"/>
+        <link rel="stylesheet" href="css/CSS_chatbox.css"/>
     </head>
     <body>
+        <%@include file="chatBox.jsp" %>
         <h2>Welcome, <%= user.getUsername()%></h2>
 
         <div class="chat-container">
@@ -205,6 +46,10 @@
 
                 <div class="inputBox" style="display: flex; align-items: center; gap: 10px;">
                     <input type="text" id="messageInput" placeholder="Type a message..." onkeydown="handleKeyPress(event)" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;" />
+                    <label id="imageUploadLabel" for="imageUpload" style="cursor: pointer;">
+                        📷
+                    </label>
+                    <input type="file" id="imageUpload" style="display: none;" multiple accept="image/*" onchange="sendImage()" />
                     <button onclick="sendMessage()" style="padding: 10px 16px; font-size: 14px; background-color: #007bff; border: none; color: white; border-radius: 6px; cursor: pointer;">Send</button>
                 </div>
                 <p id="blockNotice" style="color: red; font-weight: bold; display: none;">Bạn đã block người dùng này.</p>
@@ -217,8 +62,9 @@
             let currentChatUserId = null;
             let currentChatUserName = null;
 
+            const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
 
-            const ws = new WebSocket("ws://18.136.119.45:8080/testChat/chat");
+            const ws = new WebSocket("ws://localhost:8080/testChat/chat");
 
             ws.onopen = () => console.log("WebSocket connected");
             ws.onclose = () => console.log("WebSocket closed");
@@ -229,7 +75,12 @@
 
             ws.onmessage = function (event) {
                 const msg = JSON.parse(event.data);
-
+                if (msg.type === "unread_list") {
+                    msg.senders.forEach(senderId => {
+                        markUserAsUnread(senderId); // Thêm class 'user-unread'
+                    });
+                    return;
+                }
                 if (msg.type === "block_status") {
                     const messageInput = document.getElementById("messageInput");
                     const sendBtn = document.querySelector(".inputBox button");
@@ -253,6 +104,8 @@
                         messageInput.style.display = "none";
                         sendBtn.style.display = "none";
                         blockBtn.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "none";
+                        document.getElementById("imageUpload").style.display = "none";
                         if (msg.status === "blocked_by_me") {
                             unblockBtn.style.display = "inline-block";
                         } else {
@@ -268,10 +121,11 @@
                         blockBtn.style.display = "inline-block";
                         unblockBtn.style.display = "none";
                         blockNotice.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "inline-block";
+                        document.getElementById("imageUpload").style.display = "none";
                     }
                     return;
                 }
-
 
                 if (msg.type === "recall") {
                     handleRecallMessage(msg);
@@ -305,276 +159,13 @@
 
                 if (!isSentByMe && msg.fromUserId !== currentChatUserId) {
                     markUserAsUnread(msg.fromUserId);
+                } else
+                {
+                    markMessagesAsRead(msg.fromUserId);
                 }
             };
-
-            function selectChatUser(userId, username) {
-                currentChatUserId = userId;
-                currentChatUserName = username;
-                document.getElementById("chatWith").textContent = username;
-
-                document.querySelectorAll("#userList li").forEach(item => {
-                    item.classList.toggle("selected", parseInt(item.dataset.userid) === userId);
-                });
-
-                document.getElementById("messageInput").style.display = "block";
-                document.querySelector(".inputBox button").style.display = "inline-block";
-                document.getElementById("blockNotice").style.display = "none";
-
-                loadChatHistory(userId);
-                clearUnreadMark(userId);
-
-                fetch("/testChat/checkBlock?user1=" + currentUserId + "&user2=" + userId)
-                        .then(res => res.json())
-                        .then(data => {
-                            const blockBtn = document.getElementById("blockBtn");
-                            const unblockBtn = document.getElementById("unblockBtn");
-                            const messageInput = document.getElementById("messageInput");
-                            const sendBtn = document.querySelector(".inputBox button");
-                            const blockNotice = document.getElementById("blockNotice");
-
-                            if (data.blockedByMe) {
-                                blockBtn.style.display = "none";
-                                unblockBtn.style.display = "inline-block";
-                                messageInput.style.display = "none";
-                                sendBtn.style.display = "none";
-                                blockNotice.style.display = "block";
-                                blockNotice.textContent = "Bạn đã block người dùng này";
-                            } else if (data.blockedMe) {
-                                blockBtn.style.display = "none";
-                                unblockBtn.style.display = "none";
-                                messageInput.style.display = "none";
-                                sendBtn.style.display = "none";
-                                blockNotice.style.display = "block";
-                                blockNotice.textContent = "Bạn đã bị block bởi người dùng này";
-                            } else {
-                                blockBtn.style.display = "inline-block";
-                                unblockBtn.style.display = "none";
-                                messageInput.style.display = "block";
-                                sendBtn.style.display = "inline-block";
-                                blockNotice.style.display = "none";
-                            }
-                        })
-                        .catch(err => {
-                            console.error("Failed to check block status", err);
-                            document.getElementById("blockNotice").textContent = "Không thể kiểm tra trạng thái block.";
-                            document.getElementById("blockNotice").style.display = "block";
-                        });
-            }
-
-            function addMessageToChatBox(msg) {
-                const chatBox = document.getElementById("chatBox");
-                const p = document.createElement("p");
-                const isSentByMe = (msg.fromUserId !== undefined && msg.fromUserId === currentUserId) ||
-                        (msg.senderId !== undefined && msg.senderId === currentUserId);
-                const content = msg.content;
-                const msID = msg.messageId;
-                let timeText = "";
-
-                if (msg.timestamp) {
-                    const time = new Date(msg.timestamp);
-                    if (!isNaN(time)) {
-                        timeText = '<small style="color:gray">' + time.toString().substring(0, 24) + '</small>';
-                    } else {
-                        timeText = '<small style="color:red">Invalid Date</small>';
-                        console.error("Invalid timestamp received:", msg.timestamp);
-                    }
-                }
-
-                const isRecalled = msg.is_recall === true || msg.type === "recall";
-
-                if (isRecalled) {
-                    p.className = isSentByMe ? "msg-sent" : "msg-received";
-                    const senderName = isSentByMe ? "" : currentChatUserName + ":";
-                    p.innerHTML = "<b>" + senderName + "</b> Tin nhắn đã được thu hồi<br><small style=\"color:gray\">" + timeText + "</small>";
-                    chatBox.appendChild(p);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                    return;
-                }
-
-                p.className = isSentByMe ? "msg-sent" : "msg-received";
-                p.dataset.messageId = msID || ""; // Đảm bảo dataset.messageId luôn có giá trị
-                let messageContent = "<b>" + (isSentByMe ? "" : currentChatUserName + ":") + "</b> " + content + "<br>" + timeText;
-
-                if (isSentByMe && msID !== undefined && msID !== null && (typeof msID === "string" || typeof msID === "number")) {
-                    const validMsID = (typeof msID === "string") ? msID.trim() : msID.toString();
-                    if (validMsID && !isNaN(Number(validMsID)) && Number(validMsID) > 0) {
-                        messageContent += "<button class=\"recall-btn\" data-message-id=\"" + msID + "\" onclick=\"recallMessage(this)\">Recall</button>";
-                    } else {
-                        console.warn("messageId không hợp lệ, không thêm nút Recall:", msID);
-                    }
-                } else if (isSentByMe) {
-                    console.warn("Không thể tạo nút Recall vì messageId không hợp lệ:", msID);
-                }
-
-                p.innerHTML = messageContent;
-                chatBox.appendChild(p);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-
-            function handleRecallMessage(msg) {
-                const isSentByMe = (msg.fromUserId !== undefined && msg.fromUserId === currentUserId) ||
-                        (msg.senderId !== undefined && msg.senderId === currentUserId);
-                const messageElement = document.querySelector("#chatBox p[data-message-id='" + msg.messageId + "']");
-                if (messageElement !== null) {
-                    messageElement.className = isSentByMe ? "msg-sent" : "msg-received";
-                    const senderName = isSentByMe ? "" : currentChatUserName + ":";
-                    const time = new Date(msg.timestamp);
-                    const timeText = isNaN(time) ? "Invalid Date" : time.toString().substring(0, 24);
-                    messageElement.innerHTML = "<b>"+senderName+"</b> Tin nhắn đã được thu hồi<br><small style=\"color:gray\">"+timeText+"</small>";
-                } else {
-                    console.error("Message element not found for messageId:", msg.messageId);
-                }
-            }
-
-            function sendMessage() {
-                const input = document.getElementById("messageInput");
-                const content = input.value.trim();
-                if (!currentChatUserId)
-                    return alert("Select a user to chat with");
-                if (!content)
-                    return alert("Message cannot be empty");
-
-                const msg = {
-                    type: "message",
-                    fromUserId: currentUserId,
-                    fromUsername: currentUsername,
-                    toUserId: currentChatUserId,
-                    content: content,
-                    timestamp: new Date()
-                };
-
-                ws.send(JSON.stringify(msg));
-                input.value = "";
-            }
-
-            function handleKeyPress(event) {
-                if (event.key === "Enter") {
-                    sendMessage();
-                }
-            }
-
-            function loadChatHistory(userId) {
-                fetch("/testChat/GetChatHistory?user1=" + currentUserId + "&user2=" + userId)
-                        .then(response => {
-                            if (!response.ok) {
-                                response.text().then(text => console.error("Error body:", text));
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const chatBox = document.getElementById("chatBox");
-                            chatBox.innerHTML = "";
-                            data.forEach(addMessageToChatBox);
-                        })
-                        .catch(err => {
-                            console.error("Failed to load chat history", err);
-                            document.getElementById("chatBox").innerHTML = "<p style='color: red;'>Failed to load chat history.</p>";
-                        });
-            }
-
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission().then(permission => {
-                    if (permission !== "granted") {
-                        console.log("Notification permission denied");
-                    }
-                });
-            }
-
-            function showBrowserNotification(username, content) {
-            console.log("ahsdjhasd");
-                if (Notification.permission === "granted") {
-                    const notification = new Notification("New message from " + username, {
-                        body: content,
-                        icon: "https://uxwing.com/wp-content/themes/uxwing/download/communication-chat-call/new-message-icon.png"
-                    });
-                    notification.onclick = () => {
-                        window.focus();
-                    };
-                }
-            }
-
-            function markUserAsUnread(userId) {
-                const li = [...document.querySelectorAll("#userList li")].find(li => li.dataset.userid === userId.toString());
-                console.log("Mark unread for userId:", userId, "found li:", li);
-                if (li && !li.classList.contains("user-unread")) {
-                    li.classList.add("user-unread");
-                }
-            }
-
-            function clearUnreadMark(userId) {
-                const li = [...document.querySelectorAll("#userList li")].find(li => li.dataset.userid === userId.toString());
-                if (li) {
-                    li.classList.remove("user-unread");
-                }
-            }
-
-            function blockUser() {
-                if (!currentChatUserId || !ws || ws.readyState !== ws.OPEN)
-                    return;
-
-                const message = {
-                    type: "block",
-                    fromUserId: currentUserId,
-                    blockedId: currentChatUserId
-                };
-
-                ws.send(JSON.stringify(message));
-
-                document.getElementById("blockBtn").style.display = "none";
-                document.getElementById("unblockBtn").style.display = "inline-block";
-                document.getElementById("messageInput").style.display = "none";
-                document.querySelector(".inputBox button").style.display = "none";
-                document.getElementById("blockNotice").style.display = "block";
-                document.getElementById("blockNotice").textContent = "Bạn đã block người dùng này";
-            }
-
-
-            function unblockUser() {
-                if (!currentChatUserId || !ws || ws.readyState !== ws.OPEN)
-                    return;
-
-                const message = {
-                    type: "unblock",
-                    fromUserId: currentUserId,
-                    blockedId: currentChatUserId
-                };
-
-                ws.send(JSON.stringify(message));
-
-                document.getElementById("blockBtn").style.display = "inline-block";
-                document.getElementById("unblockBtn").style.display = "none";
-                document.getElementById("messageInput").style.display = "block";
-                document.querySelector(".inputBox button").style.display = "inline-block";
-                document.getElementById("blockNotice").style.display = "none";
-            }
-
-            function recallMessage(button) {
-                const rawId = button.dataset.messageId;
-                const messageId = rawId ? Number(rawId.trim()) : NaN;
-
-                if (!currentChatUserId) {
-                    alert("Vui lòng chọn người dùng để trò chuyện");
-                    return;
-                }
-                if (!rawId || isNaN(messageId) || messageId <= 0) {
-                    alert("ID tin nhắn không hợp lệ");
-                    return;
-                }
-
-                if (confirm("Bạn có chắc muốn thu hồi tin nhắn này?")) {
-                    const recallMsg = {
-                        type: "recall",
-                        messageId: messageId,
-                        fromUserId: currentUserId,
-                        toUserId: currentChatUserId
-                    };
-                    console.log("Sending recall message:", recallMsg);
-                    ws.send(JSON.stringify(recallMsg));
-                }
-            }
-
         </script>
+        <script src="js/JS_chatFunction.js"></script>
+        <script src="js/JS_chatBox.js"></script>
     </body>
 </html>
