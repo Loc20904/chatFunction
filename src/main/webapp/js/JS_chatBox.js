@@ -35,7 +35,7 @@ async function sendMessage() {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function handleKeyPress(event) {
+function handleKeyPresss(event) {
     if (event.key === "Enter") {
         event.preventDefault();
         sendMessage();

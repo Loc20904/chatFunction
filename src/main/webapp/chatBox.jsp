@@ -18,7 +18,7 @@
         </div>
         <div id="chatBoxAI"></div>
         <div id="butt">
-            <input type="text" id="userInput" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event)" />
+            <input type="text" id="userInput" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPresss(event)" />
             <button id="buttonChat" onclick="sendMessage()">Gửi</button>
         </div>
     </div>
