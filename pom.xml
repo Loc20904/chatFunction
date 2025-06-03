@@ -46,17 +46,17 @@
         </dependency>
         
         <!-- SQL Server JDBC Driver -->
-        <dependency>
+<!--        <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>10.2.0.jre11</version>
-        </dependency>
-        <!-- MySQL JDBC Connector -->
-<!--        <dependency>
+        </dependency>-->
+         <!--MySQL JDBC Connector--> 
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.33</version>
-        </dependency>-->
+        </dependency>
 
         <!-- JSON Processing API và implementation -->
         <dependency>

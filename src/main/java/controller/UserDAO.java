@@ -21,6 +21,7 @@ public class UserDAO {
     public static User getUserByUsername(String username) {
         try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT UserId, Username, PasswordHash FROM Users WHERE Username = ?";
+            System.out.println("1");
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, username);
             ResultSet rs = (ResultSet) ps.executeQuery();

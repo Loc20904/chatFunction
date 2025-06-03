@@ -4,22 +4,17 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- *
- * @author Thanh Loc
- */
 public class DBUtil {
 
     public static Connection getConnection() throws SQLException {
-        String url = "jdbc:sqlserver://LAPTOP-0L8RQE0C:1433;databaseName=chat;encrypt=false;trustServerCertificate=true;loginTimeout=30;";
-        String user = "loc";
-        String password = "123";
+        String url = "jdbc:mysql://chat.cfwc8w0ey4aa.ap-southeast-1.rds.amazonaws.com:3306/ChatAppDB?useSSL=false&serverTimezone=UTC";
+        String user = "admin";
+        String password = "Tuan210604";
         try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-
         return DriverManager.getConnection(url, user, password);
     }
 }
