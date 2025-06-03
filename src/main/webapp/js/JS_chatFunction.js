@@ -102,6 +102,15 @@ function selectChatUser(userId, username) {
 
             });
 
+    const dropdownBtn = document.querySelector("h3 .dropdown-btn");
+    const dropdownContent = document.querySelector("h3 .dropdown-content");
+    dropdownBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const isOpen = dropdownContent.style.display === "block";
+        document.querySelectorAll(".dropdown-content").forEach(content => content.style.display = "none");
+        dropdownContent.style.display = isOpen ? "none" : "block";
+    });
+
 }
 
 function addMessageToChatBox(msg) {
