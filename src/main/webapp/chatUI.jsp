@@ -69,7 +69,7 @@
 
         const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
 
-        const ws = new WebSocket("ws://localhost:8080/testChat/chat");
+        const ws = new WebSocket("ws://47.129.240.217:8080/testChat/chat");
 
         ws.onopen = () => console.log("WebSocket connected");
         ws.onclose = () => console.log("WebSocket closed");
