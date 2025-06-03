@@ -7,7 +7,7 @@ import java.util.List;
 public class ConversationDAO {
 
     public static int getOrCreateConversation(int user1Id, int user2Id) {
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT ConversationId FROM Conversations WHERE " +
                          "(UserAId = ? AND UserBId = ?) OR (UserAId = ? AND UserBId = ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -34,7 +34,7 @@ public class ConversationDAO {
 
     public static List<Conversation> getConversationsByUser(int userId) {
         List<Conversation> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT * FROM Conversations WHERE UserAId = ? OR UserBId = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, userId);
@@ -55,7 +55,7 @@ public class ConversationDAO {
 
     // ✅ Thêm hàm hỗ trợ lấy người còn lại trong cuộc trò chuyện
     public static int getOtherParticipant(int conversationId, int currentUserId) {
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT UserAId, UserBId FROM Conversations WHERE ConversationId = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, conversationId);

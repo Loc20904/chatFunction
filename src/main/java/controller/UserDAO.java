@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -18,7 +19,7 @@ import java.util.List;
 public class UserDAO {
 
     public static User getUserByUsername(String username) {
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT UserId, Username, PasswordHash FROM Users WHERE Username = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, username);
@@ -37,7 +38,7 @@ public class UserDAO {
     }
 
     public static User getUserById(int userId) {
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT UserId, Username, PasswordHash FROM Users WHERE UserId = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, userId);
@@ -57,7 +58,7 @@ public class UserDAO {
 
     public static List<User> getAllExcept(int userId) {
         List<User> users = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnect()) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql = "SELECT * FROM Users WHERE UserId != ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, userId);
