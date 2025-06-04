@@ -185,7 +185,6 @@ public class chat {
                 }
                 case "block": {
                     int blockedId = json.getInt("blockedId");
-
                     // Lưu trạng thái block vào DB
                     blockDAO.blockUser(fromUserId, blockedId);
 

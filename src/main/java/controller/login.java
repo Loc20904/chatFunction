@@ -19,6 +19,7 @@ public class login extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String username = req.getParameter("username");
         String password = req.getParameter("password"); // Ở đây bạn phải hash rồi so sánh thực tế
+        System.out.println("Hello ");
         User user = UserDAO.getUserByUsername(username);
 
         if (user != null && PasswordUtils.verifyPassword(password, user.getPasswordHash())) {

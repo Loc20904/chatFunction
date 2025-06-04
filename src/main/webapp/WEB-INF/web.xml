@@ -36,16 +36,27 @@
         <servlet-name>ImageServlet</servlet-name>
         <url-pattern>/images/*</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
+
+  <servlet-mapping>
         <servlet-name>s_stream</servlet-name>
         <url-pattern>/s_stream</url-pattern>
+
+    <servlet>
+        <servlet-name>GetChatHistory</servlet-name>
+        <servlet-class>controller.GetChatHistory</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>GetChatHistory</servlet-name>
+        <url-pattern>/GetChatHistory</url-pattern>
     </servlet-mapping>
+    
     <session-config>
         <session-timeout>
             30
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>chatUI.jsp</welcome-file>
+        <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 </web-app>
