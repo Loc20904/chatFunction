@@ -62,94 +62,93 @@
         </div>
 
         <script>
-        const currentUserId = <%= user.getUserId()%>;
-        const currentUsername = "<%= user.getUsername()%>";
-        let currentChatUserId = null;
-        let currentChatUserName = null;
+            const currentUserId = <%= user.getUserId()%>;
+            const currentUsername = "<%= user.getUsername()%>";
+            let currentChatUserId = null;
+            let currentChatUserName = null;
 
-        const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
-        const ws = new WebSocket("ws://" + location.host + contextPath + "/chat");
+            const ws = new WebSocket("ws://" + location.host + "/testChat/chat");
 
-        ws.onopen = () => console.log("WebSocket connected");
-        ws.onclose = () => console.log("WebSocket closed");
-        ws.onerror = err => console.error("WebSocket error", err);
+            ws.onopen = () => console.log("WebSocket connected");
+            ws.onclose = () => console.log("WebSocket closed");
+            ws.onerror = err => console.error("WebSocket error", err);
 
-        const lastNotificationTimestamps = {};
-        const NOTIFY_COOLDOWN_MS = 500;
+            const lastNotificationTimestamps = {};
+            const NOTIFY_COOLDOWN_MS = 500;
 
-        ws.onmessage = function (event) {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "unread_list") {
-                msg.senders.forEach(senderId => markUserAsUnread(senderId));
-                return;
-            }
-            if (msg.type === "block_status") {
-                const messageInput = document.getElementById("messageInput");
-                const sendBtn = document.querySelector(".inputBox button");
-                const blockBtn = document.getElementById("blockBtn");
-                const unblockBtn = document.getElementById("unblockBtn");
-                const blockNotice = document.getElementById("blockNotice");
-
-                if ((msg.status === "blocked_by_me" || msg.status === "unblocked_by_me") && currentChatUserId !== msg.blockedId)
+            ws.onmessage = function (event) {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "unread_list") {
+                    msg.senders.forEach(senderId => markUserAsUnread(senderId));
                     return;
-                if ((msg.status === "blocked_me" || msg.status === "unblocked_me") && currentChatUserId !== msg.blockerId)
-                    return;
+                }
+                if (msg.type === "block_status") {
+                    const messageInput = document.getElementById("messageInput");
+                    const sendBtn = document.querySelector(".inputBox button");
+                    const blockBtn = document.getElementById("blockBtn");
+                    const unblockBtn = document.getElementById("unblockBtn");
+                    const blockNotice = document.getElementById("blockNotice");
 
-                if (msg.status === "blocked_by_me" || msg.status === "blocked_me") {
-                    messageInput.style.display = "none";
-                    sendBtn.style.display = "none";
-                    blockBtn.style.display = "none";
-                    document.getElementById("imageUploadLabel").style.display = "none";
-                    document.getElementById("imageUpload").style.display = "none";
-                    if (msg.status === "blocked_by_me")
-                        unblockBtn.style.display = "inline-block";
-                    else
+                    if ((msg.status === "blocked_by_me" || msg.status === "unblocked_by_me") && currentChatUserId !== msg.blockedId)
+                        return;
+                    if ((msg.status === "blocked_me" || msg.status === "unblocked_me") && currentChatUserId !== msg.blockerId)
+                        return;
+
+                    if (msg.status === "blocked_by_me" || msg.status === "blocked_me") {
+                        messageInput.style.display = "none";
+                        sendBtn.style.display = "none";
+                        blockBtn.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "none";
+                        document.getElementById("imageUpload").style.display = "none";
+                        if (msg.status === "blocked_by_me")
+                            unblockBtn.style.display = "inline-block";
+                        else
+                            unblockBtn.style.display = "none";
+                        blockNotice.textContent = msg.status === "blocked_by_me" ? "Bạn đã block người dùng này" : "Người dùng này đã block bạn";
+                        blockNotice.style.display = "block";
+                    } else if (msg.status === "unblocked_by_me" || msg.status === "unblocked_me") {
+                        messageInput.style.display = "block";
+                        sendBtn.style.display = "inline-block";
+                        blockBtn.style.display = "inline-block";
                         unblockBtn.style.display = "none";
-                    blockNotice.textContent = msg.status === "blocked_by_me" ? "Bạn đã block người dùng này" : "Người dùng này đã block bạn";
-                    blockNotice.style.display = "block";
-                } else if (msg.status === "unblocked_by_me" || msg.status === "unblocked_me") {
-                    messageInput.style.display = "block";
-                    sendBtn.style.display = "inline-block";
-                    blockBtn.style.display = "inline-block";
-                    unblockBtn.style.display = "none";
-                    blockNotice.style.display = "none";
-                    document.getElementById("imageUploadLabel").style.display = "inline-block";
-                    document.getElementById("imageUpload").style.display = "none";
+                        blockNotice.style.display = "none";
+                        document.getElementById("imageUploadLabel").style.display = "inline-block";
+                        document.getElementById("imageUpload").style.display = "none";
+                    }
+                    return;
                 }
-                return;
-            }
 
-            if (msg.type === "recall") {
-                handleRecallMessage(msg);
-                return;
-            }
-
-            if (msg.type === "recall_failed") {
-                alert(msg.message);
-                return;
-            }
-
-            const isRelated = (msg.fromUserId === currentChatUserId && msg.toUserId === currentUserId) ||
-                    (msg.toUserId === currentChatUserId && msg.fromUserId === currentUserId);
-            const isSentByMe = msg.fromUserId === currentUserId;
-
-            if (isRelated)
-                addMessageToChatBox(msg);
-
-            if (!isSentByMe && (!isRelated || document.hidden)) {
-                const now = Date.now();
-                const lastTime = lastNotificationTimestamps[msg.fromUserId] || 0;
-                if (now - lastTime > NOTIFY_COOLDOWN_MS) {
-                    showBrowserNotification(msg.fromUsername, msg.content);
-                    lastNotificationTimestamps[msg.fromUserId] = now;
+                if (msg.type === "recall") {
+                    handleRecallMessage(msg);
+                    return;
                 }
-            }
 
-            if (!isSentByMe && msg.fromUserId !== currentChatUserId)
-                markUserAsUnread(msg.fromUserId);
-            else
-                markMessagesAsRead(msg.fromUserId);
-        };
+                if (msg.type === "recall_failed") {
+                    alert(msg.message);
+                    return;
+                }
+
+                const isRelated = (msg.fromUserId === currentChatUserId && msg.toUserId === currentUserId) ||
+                        (msg.toUserId === currentChatUserId && msg.fromUserId === currentUserId);
+                const isSentByMe = msg.fromUserId === currentUserId;
+
+                if (isRelated)
+                    addMessageToChatBox(msg);
+
+                if (!isSentByMe && (!isRelated || document.hidden)) {
+                    const now = Date.now();
+                    const lastTime = lastNotificationTimestamps[msg.fromUserId] || 0;
+                    if (now - lastTime > NOTIFY_COOLDOWN_MS) {
+                        showBrowserNotification(msg.fromUsername, msg.content);
+                        lastNotificationTimestamps[msg.fromUserId] = now;
+                    }
+                }
+
+                if (!isSentByMe && msg.fromUserId !== currentChatUserId)
+                    markUserAsUnread(msg.fromUserId);
+                else
+                    markMessagesAsRead(msg.fromUserId);
+            };
         </script>
         <script src="js/JS_chatFunction.js"></script>
         <script src="js/JS_chatBox.js"></script>

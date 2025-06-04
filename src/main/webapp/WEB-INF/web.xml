@@ -32,6 +32,15 @@
         <servlet-name>ImageServlet</servlet-name>
         <url-pattern>/images/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>GetChatHistory</servlet-name>
+        <servlet-class>controller.GetChatHistory</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>GetChatHistory</servlet-name>
+        <url-pattern>/GetChatHistory</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>
             30

@@ -20,7 +20,6 @@ import java.util.List;
  *
  * @author Thanh Loc
  */
-@WebServlet("/GetChatHistory")
 public class GetChatHistory extends HttpServlet {
 
     @Override
