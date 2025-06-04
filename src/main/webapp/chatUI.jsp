@@ -67,6 +67,7 @@
             let currentChatUserId = null;
             let currentChatUserName = null;
 
+            const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 1));
             const ws = new WebSocket("ws://" + location.host + "/testChat/chat");
 
             ws.onopen = () => console.log("WebSocket connected");
