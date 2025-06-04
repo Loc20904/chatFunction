@@ -37,10 +37,11 @@
         <url-pattern>/images/*</url-pattern>
     </servlet-mapping>
 
-  <servlet-mapping>
+    <servlet-mapping>
         <servlet-name>s_stream</servlet-name>
         <url-pattern>/s_stream</url-pattern>
-
+    </servlet-mapping>
+    
     <servlet>
         <servlet-name>GetChatHistory</servlet-name>
         <servlet-class>controller.GetChatHistory</servlet-class>
