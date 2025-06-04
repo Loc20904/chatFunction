@@ -18,15 +18,15 @@
     </properties>
     
     <dependencies>
-        <!-- Jakarta EE 10 API (scope provided vì server có sẵn) -->
+        <!-- Jakarta EE 10 API -->
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
             <version>${jakartaee}</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- JSTL API (bỏ scope provided để đóng gói trong WAR) -->
+
+        <!-- JSTL -->
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
             <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
@@ -37,7 +37,7 @@
             <artifactId>jakarta.servlet.jsp.jstl</artifactId>
             <version>3.0.1</version>
         </dependency>
-        
+
         <!-- Gson JSON -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -46,29 +46,29 @@
         </dependency>
         
         <!-- SQL Server JDBC Driver -->
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>10.2.0.jre11</version>
         </dependency>-->
-         <!--MySQL JDBC Connector--> 
+        <!--MySQL JDBC Connector--> 
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.33</version>
         </dependency>
 
-        <!-- JSON Processing API và implementation -->
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
             <version>2.1.1</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>jakarta.json</artifactId>
-            <version>2.0.1</version>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <version>1.1.1</version>
         </dependency>
+
         
         <!-- BCrypt (tùy chọn) -->
         <dependency>
